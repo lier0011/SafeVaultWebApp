@@ -1,0 +1,5 @@
+@page
+@model SafeVaultWebApp.Pages.SuccessModel
+
+<h1>Success</h1>
+<p>Welcome, @(string.IsNullOrEmpty(Model.Username) ? "Guest" : Model.Username)!</p>
