@@ -50,6 +50,17 @@ public class InputValidationModel : PageModel
             return Page();
         }
 
+        // Securely retrieve user information to ensure no duplicates
+        var existingUser = _dbContext.Users
+            .Where(u => u.Username == Username && u.Email == Email)
+            .FirstOrDefault();
+
+        if (existingUser != null)
+        {
+            ModelState.AddModelError(string.Empty, "Cannot save user!");
+            return Page();
+        }
+
         // Save the sanitized data to the database using AppDbContext
         var user = new User
         {
