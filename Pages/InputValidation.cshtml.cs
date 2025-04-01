@@ -1,16 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using SafeVaultWebApp.Data;
+using SafeVaultWebApp.Models;
+using System.Text.RegularExpressions;
 
 namespace SafeVaultWebApp.Pages;
 
 public class InputValidationModel : PageModel
 {
     private readonly ILogger<InputValidationModel> _logger;
+    private readonly AppDbContext _dbContext;
 
-    public InputValidationModel(ILogger<InputValidationModel> logger)
+    public InputValidationModel(ILogger<InputValidationModel> logger, AppDbContext dbContext)
     {
         _logger = logger;
+        _dbContext = dbContext;
     }
 
     [BindProperty]
@@ -38,8 +43,60 @@ public class InputValidationModel : PageModel
             return Page();
         }
 
-        // Process the form data (e.g., save to database)
+        // Check for potentially harmful input
+        if (ContainsHarmfulInput(Username) || ContainsHarmfulInput(Email))
+        {
+            ModelState.AddModelError(string.Empty, "Input contains potentially harmful content.");
+            return Page();
+        }
+
+        // Securely retrieve user information to ensure no duplicates
+        var existingUser = _dbContext.Users
+            .Where(u => u.Username == Username && u.Email == Email)
+            .FirstOrDefault();
+
+        if (existingUser != null)
+        {
+            ModelState.AddModelError(string.Empty, "Cannot save user!");
+            return Page();
+        }
+
+        // Save the sanitized data to the database using AppDbContext
+        var user = new User
+        {
+            Username = Username,
+            Email = Email
+        };
+        _dbContext.Users.Add(user);
+        _dbContext.SaveChanges();
+
         Message = "Form submitted successfully!";
         return RedirectToPage("/Success", new { username = Username });
+    }
+
+    private bool ContainsHarmfulInput(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        // Check for HTML tags
+        if (Regex.IsMatch(input, @"<.*?>"))
+        {
+            return true;
+        }
+
+        // Check for SQL keywords or patterns
+        string[] sqlKeywords = { "SELECT", "INSERT", "DELETE", "UPDATE", "DROP", "--", ";" };
+        foreach (var keyword in sqlKeywords)
+        {
+            if (input.ToUpper().Contains(keyword))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
