@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
+using SafeVaultWebApp.Tools;
+
 namespace SafeVaultWebApp.Pages;
 
 public class LoginModel : PageModel
@@ -15,9 +17,23 @@ public class LoginModel : PageModel
 
     public IActionResult OnPost()
     {
-        if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
+        if (string.IsNullOrEmpty(Username))
         {
-            Message = "Username and Password are required.";
+            Message = "Username is required.";
+            return Page();
+
+        } else if (!InputValidator.IsValidInput(Username))
+        {
+            Message = "Invalid Username.";
+            return Page();
+        }
+
+        if (string.IsNullOrEmpty(Password)) {
+            Message = "Password is required.";
+            return Page();
+        } else if (!InputValidator.IsValidInput(Password))
+        {
+            Message = "Invalid Password.";
             return Page();
         }
 
