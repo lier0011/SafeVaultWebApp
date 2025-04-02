@@ -63,7 +63,7 @@ public class InputValidationModel : PageModel
             .Where(u => u.Username == Username && u.Email == Email)
             .FirstOrDefault();
 
-        # example of secure parameterised query for the above "existingUser" handling
+        // example of secure parameterised query for the above "existingUser" handling
         string query = "SELECT COUNT(1) FROM Users WHERE Username = @Username AND Email = @Email";
         var connectionString = _configuration.GetConnectionString("DefaultConnection");
         int countUser = 0;
