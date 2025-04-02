@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using SafeVaultWebApp.Data;
 using SafeVaultWebApp.Models;
 using SafeVaultWebApp.Tools;
+using Microsoft.Data.Sqlite;
 
 namespace SafeVaultWebApp.Pages;
 
@@ -11,11 +12,13 @@ public class InputValidationModel : PageModel
 {
     private readonly ILogger<InputValidationModel> _logger;
     private readonly AppDbContext _dbContext;
+    private readonly IConfiguration _configuration;
 
-    public InputValidationModel(ILogger<InputValidationModel> logger, AppDbContext dbContext)
+    public InputValidationModel(ILogger<InputValidationModel> logger, AppDbContext dbContext, IConfiguration configuration)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _configuration = configuration;
     }
 
     [BindProperty]
@@ -60,7 +63,23 @@ public class InputValidationModel : PageModel
             .Where(u => u.Username == Username && u.Email == Email)
             .FirstOrDefault();
 
-        if (existingUser != null)
+        # example of secure parameterised query for the above "existingUser" handling
+        string query = "SELECT COUNT(1) FROM Users WHERE Username = @Username AND Email = @Email";
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+        int countUser = 0;
+        using (var connection = new SqliteConnection(connectionString))
+        {
+            connection.Open();
+            using (var command = new SqliteCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Username", Username);
+                command.Parameters.AddWithValue("@Email", Email);
+                countUser = Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+
+        Console.WriteLine($"countUser: {countUser}");
+        if (existingUser != null && countUser > 0)
         {
             ModelState.AddModelError(string.Empty, "Cannot save user!");
             return Page();
