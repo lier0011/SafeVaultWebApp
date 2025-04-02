@@ -1,24 +1,37 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SafeVaultWebApp.Tools;
+using SafeVaultWebApp.Data; // Assuming this namespace contains the database context
+using SafeVaultWebApp.Models; // Assuming this namespace contains the User model
+using BCrypt.Net; // Add this for password hashing
 
 namespace SafeVaultWebApp.Pages;
 
 public class RegisterModel : PageModel
 {
-    [BindProperty]
-    public string Username { get; set; }
+    private readonly ILogger<RegisterModel> _logger;
+    private readonly AppDbContext _dbContext;
+    private readonly IConfiguration _configuration;
+    public RegisterModel(ILogger<RegisterModel> logger, AppDbContext dbContext, IConfiguration configuration)
+    {
+        _logger = logger;
+        _dbContext = dbContext;
+        _configuration = configuration;
+    }
 
     [BindProperty]
-    public string Email { get; set; }
+    public required string Username { get; set; }
 
     [BindProperty]
-    public string Role { get; set; }
+    public required string Email { get; set; }
 
     [BindProperty]
-    public string Password { get; set; }
+    public required string Role { get; set; }
 
-    public string Message { get; set; }
+    [BindProperty]
+    public required string Password { get; set; }
+
+    public string? Message { get; set; }
 
     public IActionResult OnPost()
     {
@@ -63,7 +76,21 @@ public class RegisterModel : PageModel
             return Page();
         }
 
-        // Add your registration logic here (e.g., save user to the database)
+        // Hash the password before saving
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
+
+        // Save user to the database
+        var user = new User
+        {
+            Username = Username,
+            Email = Email,
+            Role = Role,
+            Password = hashedPassword
+        };
+
+        _dbContext.Users.Add(user);
+        _dbContext.SaveChanges();
+
         Message = "Registration successful!";
         return RedirectToPage("/Success", new { username = Username });
     }
