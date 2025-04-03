@@ -1,25 +1,36 @@
 @page
 @model SafeVaultWebApp.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
 
-<form method="post">
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div>
-        <label asp-for="Username"></label>
-        <input asp-for="Username" class="form-control" />
-        <span asp-validation-for="Username" class="text-danger"></span>
-    </div>
-
-    <div>
-        <label asp-for="Password"></label>
-        <input asp-for="Password" type="password" class="form-control" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
-
-@if (!string.IsNullOrEmpty(Model.Message))
+@if (Model.IsAuthenticated)
 {
-    <p class="text-danger">@Model.Message</p>
+    <h3>Welcome, @Model.Username!</h3>
+}
+else
+{
+    <h2>Login</h2>
+    <form method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <div>
+            <label asp-for="Username"></label>
+            <input asp-for="Username" class="form-control" />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+
+        <div>
+            <label asp-for="Password"></label>
+            <input asp-for="Password" type="password" class="form-control" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="text-danger">@Model.Message</p>
+    }
 }

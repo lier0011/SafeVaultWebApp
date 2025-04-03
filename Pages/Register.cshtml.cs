@@ -44,11 +44,6 @@ public class RegisterModel : PageModel
             ModelState.AddModelError(nameof(Username), "Invalid Username.");
         }
 
-        if (_dbContext.Users.Any(u => u.Username == Username))
-        {
-            ModelState.AddModelError(nameof(Username), "Username already exists.");
-        }
-        
         if (string.IsNullOrEmpty(Email))
         {
             ModelState.AddModelError(nameof(Email), "Email is required.");
@@ -56,6 +51,13 @@ public class RegisterModel : PageModel
         else if (!InputValidator.IsValidInput(Email))
         {
             ModelState.AddModelError(nameof(Email), "Invalid Email.");
+        }
+
+        Console.WriteLine($"Username: {Username}");
+        Console.WriteLine($"Email: {Email}");
+        if (_dbContext.Users.Any(u => u.Username == Username && u.Email == Email))
+        {
+            ModelState.AddModelError(nameof(Username), "Username already exists.");
         }
 
         if (string.IsNullOrEmpty(Role))
