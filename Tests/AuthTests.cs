@@ -1,76 +1,105 @@
 using NUnit.Framework;
-using Moq;
-
-using SafeVaultWebApp.Tests.Services; // Assuming you have a service for authentication
-using SafeVaultWebApp.Models;   // Assuming you have models for user data
+using Microsoft.EntityFrameworkCore;
+using SafeVaultWebApp.Services;
+using SafeVaultWebApp.Models;
+using SafeVaultWebApp.Data;
 
 namespace SafeVaultWebApp.Tests;
 
 [TestFixture]
 public class AuthTests
 {
-    private Mock<IAuthService> _authServiceMock;
+    private AuthService _authService;
+    private AppDbContext _dbContext;
 
     [SetUp]
     public void Setup()
     {
-        _authServiceMock = new Mock<IAuthService>();
+        // Configure in-memory database
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: "TestDatabase")
+            .Options;
+
+        _dbContext = new AppDbContext(options);
+
+        // Seed test data
+        _dbContext.Users.AddRange(
+            new User { 
+                UserID = 1, Username = "admin", 
+                Password = BCrypt.Net.BCrypt.HashPassword("admin123"), 
+                Email = "admin@email", Role = "Admin" 
+            },
+            new User { 
+                UserID = 2, Username = "user", 
+                Password = BCrypt.Net.BCrypt.HashPassword("user123"), 
+                Email = "user@email", Role = "User" 
+            }
+        );
+        _dbContext.SaveChanges();
+
+        // Initialize AuthService with the in-memory context
+        _authService = new AuthService(_dbContext);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        // Dispose of the in-memory database
+        _dbContext.Database.EnsureDeleted();
+        _dbContext.Dispose();
     }
 
     [Test]
-    public void InvalidLoginAttempt_ShouldReturnFalse()
+    public void InvalidLoginAttempt_ShouldReturnNull()
     {
         // Arrange
         var invalidUsername = "invalidUser";
         var invalidPassword = "wrongPassword";
-        _authServiceMock.Setup(s => s.Login(invalidUsername, invalidPassword)).Returns(false);
 
         // Act
-        var result = _authServiceMock.Object.Login(invalidUsername, invalidPassword);
+        var result = _authService.Login(invalidUsername, invalidPassword);
 
         // Assert
-        Assert.That(result, Is.False, "Invalid login attempt should return false.");
+        Assert.That(result, Is.Null, "Invalid login attempt should return null.");
     }
 
     [Test]
-    public void UnauthorizedAccess_ShouldThrowException()
+    public void ValidLoginAttempt_ShouldReturnTheUser()
     {
         // Arrange
-        var unauthorizedUserId = 999; // Simulate a user ID with no access
-        _authServiceMock.Setup(s => s.CheckAccess(unauthorizedUserId))
-            .Throws(new UnauthorizedAccessException());
+        var validUsername = "admin";
+        var validPassword = "admin123";
 
-        // Act & Assert
-        Assert.That(() => _authServiceMock.Object.CheckAccess(unauthorizedUserId), 
-            Throws.TypeOf<UnauthorizedAccessException>(), 
-            "Unauthorized access should throw an exception.");
+        // Act
+        var result = _authService.Login(validUsername, validPassword);
+
+        // Assert
+        Assert.That(result, Is.InstanceOf<User>(), "Valid login attempt should return a User object.");
     }
 
     [Test]
     public void AdminAccess_ShouldAllowAccess()
     {
         // Arrange
-        var adminUserId = 1; // Simulate an admin user ID
-        _authServiceMock.Setup(s => s.CheckAccess(adminUserId)).Returns(true);
+        var adminUser = _dbContext.Users.First(u => u.Username == "admin");
 
         // Act
-        var result = _authServiceMock.Object.CheckAccess(adminUserId);
+        var result = _authService.CheckAccess(adminUser, "Admin");
 
         // Assert
         Assert.That(result, Is.True, "Admin should have access.");
     }
 
     [Test]
-    public void RegularUserAccess_ShouldDenyAccessToRestrictedResource()
+    public void RegularUserAccess_ShouldDenyAccessToAdminResource()
     {
         // Arrange
-        var regularUserId = 2; // Simulate a regular user ID
-        _authServiceMock.Setup(s => s.CheckAccess(regularUserId)).Returns(false);
+        var regularUser = _dbContext.Users.First(u => u.Username == "user");
 
         // Act
-        var result = _authServiceMock.Object.CheckAccess(regularUserId);
+        var result = _authService.CheckAccess(regularUser, "Admin");
 
         // Assert
-        Assert.That(result, Is.False, "Regular user should not have access to restricted resources.");
+        Assert.That(result, Is.False, "Regular user should not have access to admin resources.");
     }
 }
