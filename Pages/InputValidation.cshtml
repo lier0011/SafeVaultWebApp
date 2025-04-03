@@ -1,25 +1,32 @@
 @page
 @model SafeVaultWebApp.Pages.InputValidationModel
 
-<form method="post">
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div>
-        <label asp-for="Username"></label>
-        <input asp-for="Username" class="form-control" />
-        <!--span asp-validation-for="Username" class="text-danger"></span-->
-    </div>
-
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" class="form-control" />
-        <!--span asp-validation-for="Email" class="text-danger"></span-->
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-
-@if (!string.IsNullOrEmpty(Model.Message))
+@if (Model.IsAuthenticated)
 {
-    <p class="text-success">@Model.Message</p>
+    <form method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <div>
+            <label asp-for="Username"></label>
+            <input asp-for="Username" class="form-control" />
+            <!--span asp-validation-for="Username" class="text-danger"></span-->
+        </div>
+
+        <div>
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="form-control" />
+            <!--span asp-validation-for="Email" class="text-danger"></span-->
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="text-success">@Model.Message</p>
+    }
+}
+else
+{
+    <h3>Admin only!</h3>
 }

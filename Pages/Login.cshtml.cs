@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BCrypt.Net; // Add this for password verification
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 using SafeVaultWebApp.Data;
 using SafeVaultWebApp.Tools;
@@ -19,6 +22,7 @@ public class LoginModel : PageModel
         _dbContext = dbContext;
         _configuration = configuration;
     }
+
     [BindProperty]
     public required string Username { get; set; }
 
@@ -26,8 +30,18 @@ public class LoginModel : PageModel
     public required string Password { get; set; }
 
     public string? Message { get; set; }
+    public bool IsAuthenticated { get; private set; }
 
-    public IActionResult OnPost()
+    public void OnGet()
+    {
+        IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
+        if (IsAuthenticated)
+        {
+            Username = User.FindFirst(ClaimTypes.Name)?.Value ?? "User";
+        }
+    }
+
+    public async Task<IActionResult> OnPostAsync()
     {
         if (string.IsNullOrEmpty(Username))
         {
@@ -58,6 +72,14 @@ public class LoginModel : PageModel
             Message = "Invalid username or password.";
             return Page();
         }
+
+        // Set the username in the authentication cookie
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, Username)
+        };
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
         Message = "Login successful!";
         return RedirectToPage("/Success", new { username = Username });

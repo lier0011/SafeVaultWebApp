@@ -1,13 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+
 using SafeVaultWebApp.Data;
-using SafeVaultWebApp.Models;
 using SafeVaultWebApp.Tools;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace SafeVaultWebApp.Pages;
 
+//[Authorize(Roles = "admin")] // Restrict access to admin role
 public class InputValidationModel : PageModel
 {
     private readonly ILogger<InputValidationModel> _logger;
@@ -33,10 +37,17 @@ public class InputValidationModel : PageModel
     public required string Email { get; set; }
 
     public string? Message { get; private set; }
+    public bool IsAuthenticated { get; private set; }
+    public bool IsAuthorized { get; private set; }
 
     public void OnGet()
     {
-        // ...existing code...
+        IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
+        /*if (IsAuthenticated)
+        {
+            Username = User.FindFirst(ClaimTypes.Name)?.Value ?? "User";
+            Console.WriteLine(User.IsInRole("admin"));
+        }*/
     }
 
     public IActionResult OnPost()
