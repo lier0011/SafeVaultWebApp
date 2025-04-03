@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 using SafeVaultWebApp.Data;
 using SafeVaultWebApp.Tools;
+using SafeVaultWebApp.Services;
 
 namespace SafeVaultWebApp.Pages;
 
@@ -66,13 +67,13 @@ public class LoginModel : PageModel
         }
 
         // Authenticate user
-        var user = _dbContext.Users.FirstOrDefault(u => u.Username == Username);
-        if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.Password))
-        {
+        AuthService authService = new AuthService(_dbContext);
+        var user = authService.Login(Username, Password);
+        if (user == null) {
             Message = "Invalid username or password.";
             return Page();
         }
-
+        
         // Set the username in the authentication cookie
         var claims = new List<Claim>
         {
@@ -80,7 +81,8 @@ public class LoginModel : PageModel
         };
 
         // Check if the user has the "Admin" role and add the claim
-        if (user.Role.ToUpper() == "ADMIN")
+        bool accessOK = authService.CheckAccess(user, "ADMIN");
+        if (accessOK == true)
         {
             claims.Add(new Claim(ClaimTypes.Role, user.Role.ToUpper()));
         }
