@@ -1,7 +1,7 @@
 @page
 @model SafeVaultWebApp.Pages.InputValidationModel
 
-@if (Model.IsAuthenticated)
+@if (Model.IsAuthenticated && User.IsInRole("ADMIN"))
 {
     <form method="post">
         <div asp-validation-summary="All" class="text-danger"></div>

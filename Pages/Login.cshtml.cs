@@ -78,6 +78,13 @@ public class LoginModel : PageModel
         {
             new Claim(ClaimTypes.Name, Username)
         };
+
+        // Check if the user has the "Admin" role and add the claim
+        if (user.Role.ToUpper() == "ADMIN")
+        {
+            claims.Add(new Claim(ClaimTypes.Role, user.Role.ToUpper()));
+        }
+
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
