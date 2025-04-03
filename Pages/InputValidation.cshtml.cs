@@ -81,20 +81,11 @@ public class InputValidationModel : PageModel
         Console.WriteLine($"countUser: {countUser}");
         if (existingUser != null && countUser > 0)
         {
-            ModelState.AddModelError(string.Empty, "Cannot save user!");
+            ModelState.AddModelError(string.Empty, "Valid user");
+            return Page();
+        } else {
+            ModelState.AddModelError(string.Empty, "Invalid user");
             return Page();
         }
-
-        // Save the sanitized data to the database using AppDbContext
-        var user = new User
-        {
-            Username = Username,
-            Email = Email
-        };
-        _dbContext.Users.Add(user);
-        _dbContext.SaveChanges();
-
-        Message = "Form submitted successfully!";
-        return RedirectToPage("/Success", new { username = Username });
     }
 }
