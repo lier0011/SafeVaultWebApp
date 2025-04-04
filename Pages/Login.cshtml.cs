@@ -11,6 +11,7 @@ using SafeVaultWebApp.Services;
 
 namespace SafeVaultWebApp.Pages;
 
+[ValidateAntiForgeryToken]
 public class LoginModel : PageModel
 {
     private readonly ILogger<LoginModel> _logger;

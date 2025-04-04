@@ -7,6 +7,7 @@ using BCrypt.Net; // Add this for password hashing
 
 namespace SafeVaultWebApp.Pages;
 
+[ValidateAntiForgeryToken]
 public class RegisterModel : PageModel
 {
     private readonly ILogger<RegisterModel> _logger;
