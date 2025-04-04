@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace SafeVaultWebApp.Pages;
 
-//[Authorize(Roles = "admin")] // Restrict access to admin role
+[ValidateAntiForgeryToken]
 public class InputValidationModel : PageModel
 {
     private readonly ILogger<InputValidationModel> _logger;
