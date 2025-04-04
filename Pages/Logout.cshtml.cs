@@ -13,6 +13,6 @@ public class LogoutModel : PageModel
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
         // Redirect to the login page
-        return RedirectToPage("/Login");
+        return RedirectToPage("/Success", new { message = "You have been logged out successfully." });
     }
 }
