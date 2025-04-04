@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 
 namespace SafeVaultWebApp.Tools;
@@ -21,10 +22,16 @@ public static class InputValidator
         string[] sqlKeywords = { "SELECT", "INSERT", "DELETE", "UPDATE", "DROP", "--", ";" };
         foreach (var keyword in sqlKeywords)
         {
-            if (input.ToUpper().Contains(keyword))
+            if (Regex.IsMatch(input, $@"\b{keyword}\b", RegexOptions.IgnoreCase))
             {
                 return false;
             }
+        }
+
+        // Reject input with special characters often used in attacks
+        if (Regex.IsMatch(input, @"['"";]"))
+        {
+            return false;
         }
 
         return true;

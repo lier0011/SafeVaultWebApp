@@ -91,6 +91,6 @@ public class LoginModel : PageModel
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
         Message = "Login successful!";
-        return RedirectToPage("/Success", new { username = Username });
+        return RedirectToPage("/Success", new { message = Message });
     }
 }

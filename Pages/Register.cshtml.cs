@@ -99,6 +99,6 @@ public class RegisterModel : PageModel
         _dbContext.SaveChanges();
 
         Message = "Registration successful!";
-        return RedirectToPage("/Success", new { username = Username });
+        return RedirectToPage("/Success", new { message = Message });
     }
 }
