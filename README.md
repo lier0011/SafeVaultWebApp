@@ -6,4 +6,6 @@ Including such aspects:
 2) user authentication (login and logout section)
 3) role-based authorization (input validation section for admin only)
 
-I also implemented NUnit based testers for each of those features.
+Other features:
+* NUnit tester
+* SQLite database
